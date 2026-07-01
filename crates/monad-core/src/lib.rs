@@ -8,8 +8,9 @@ use std::path::{Path, PathBuf};
 mod memory;
 
 pub use memory::{
-    inspect_memory, MemoryBackend, MemoryFile, MemoryInspection, EXPECTED_MEMORY_FILES,
-    MEMORY_INDEX_PATH, MEMORY_POLICY_PATH, PLANNED_MEMORY_BACKENDS,
+    inspect_memory, run_memory_check, MemoryBackend, MemoryCheckItem, MemoryCheckReport,
+    MemoryFile, MemoryInspection, EXPECTED_MEMORY_FILES, MEMORY_INDEX_PATH, MEMORY_POLICY_PATH,
+    PLANNED_MEMORY_BACKENDS,
 };
 
 /// Canonical product name.

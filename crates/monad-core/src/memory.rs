@@ -194,6 +194,176 @@ fn read_optional(path: PathBuf) -> String {
     fs::read_to_string(path).unwrap_or_default()
 }
 
+/// One native memory check item.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct MemoryCheckItem {
+    /// Stable item name.
+    pub name: String,
+
+    /// Check status.
+    pub status: CheckStatus,
+
+    /// Human-readable check message.
+    pub message: String,
+}
+
+/// Native memory check report.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct MemoryCheckReport {
+    /// Workspace root used for the check.
+    pub root: PathBuf,
+
+    /// Overall check status.
+    pub status: CheckStatus,
+
+    /// Individual check items.
+    pub items: Vec<MemoryCheckItem>,
+
+    /// Memory inspection used by the check.
+    pub inspection: MemoryInspection,
+}
+
+impl MemoryCheckReport {
+    /// Count passing check items.
+    #[must_use]
+    pub fn pass_count(&self) -> usize {
+        self.items
+            .iter()
+            .filter(|item| item.status == CheckStatus::Pass)
+            .count()
+    }
+
+    /// Count warning check items.
+    #[must_use]
+    pub fn warn_count(&self) -> usize {
+        self.items
+            .iter()
+            .filter(|item| item.status == CheckStatus::Warn)
+            .count()
+    }
+
+    /// Count failing check items.
+    #[must_use]
+    pub fn fail_count(&self) -> usize {
+        self.items
+            .iter()
+            .filter(|item| item.status == CheckStatus::Fail)
+            .count()
+    }
+}
+
+/// Run the native Monad Memory foundation check.
+///
+/// # Errors
+///
+/// Returns an error when memory inspection fails.
+pub fn run_memory_check(root: &Path) -> Result<MemoryCheckReport, WorkspaceInspectionError> {
+    let inspection = inspect_memory(root)?;
+    let mut items = Vec::new();
+
+    add_memory_file_check(&mut items, &inspection);
+    add_memory_backend_check(&mut items, &inspection);
+    add_memory_policy_checks(&mut items, &inspection);
+
+    let status = summarize_memory_check_status(&items);
+
+    Ok(MemoryCheckReport {
+        root: inspection.root.clone(),
+        status,
+        items,
+        inspection,
+    })
+}
+
+fn add_memory_file_check(items: &mut Vec<MemoryCheckItem>, inspection: &MemoryInspection) {
+    let missing_files = inspection.missing_file_names();
+
+    items.push(MemoryCheckItem {
+        name: "memory-files".to_string(),
+        status: presence_status(missing_files.is_empty()),
+        message: if missing_files.is_empty() {
+            format!(
+                "all {} expected memory files are present",
+                inspection.files.len()
+            )
+        } else {
+            format!("missing memory files: {}", missing_files.join(", "))
+        },
+    });
+}
+
+fn add_memory_backend_check(items: &mut Vec<MemoryCheckItem>, inspection: &MemoryInspection) {
+    let missing_backends = inspection
+        .backends
+        .iter()
+        .filter(|backend| backend.status == CheckStatus::Fail)
+        .map(|backend| backend.name.as_str())
+        .collect::<Vec<_>>();
+
+    items.push(MemoryCheckItem {
+        name: "memory-backends".to_string(),
+        status: presence_status(missing_backends.is_empty()),
+        message: if missing_backends.is_empty() {
+            format!(
+                "all {} planned memory backends are registered",
+                inspection.backends.len()
+            )
+        } else {
+            format!(
+                "missing memory backend references: {}",
+                missing_backends.join(", ")
+            )
+        },
+    });
+}
+
+fn add_memory_policy_checks(items: &mut Vec<MemoryCheckItem>, inspection: &MemoryInspection) {
+    let checks = [
+        (
+            "local-first-memory-policy",
+            inspection.local_first_policy_status,
+            "memory foundation must include local-first policy language",
+        ),
+        (
+            "inspectable-memory-policy",
+            inspection.inspectable_policy_status,
+            "memory foundation must include inspectable policy language",
+        ),
+        (
+            "policy-governed-memory",
+            inspection.policy_governed_status,
+            "memory foundation must include policy-governed memory language",
+        ),
+    ];
+
+    for (name, status, message) in checks {
+        add_memory_status_check(items, name, status, message.to_string());
+    }
+}
+
+fn summarize_memory_check_status(items: &[MemoryCheckItem]) -> CheckStatus {
+    if items.iter().any(|item| item.status == CheckStatus::Fail) {
+        CheckStatus::Fail
+    } else if items.iter().any(|item| item.status == CheckStatus::Warn) {
+        CheckStatus::Warn
+    } else {
+        CheckStatus::Pass
+    }
+}
+
+fn add_memory_status_check(
+    items: &mut Vec<MemoryCheckItem>,
+    name: &str,
+    status: CheckStatus,
+    message: String,
+) {
+    items.push(MemoryCheckItem {
+        name: name.to_string(),
+        status,
+        message,
+    });
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

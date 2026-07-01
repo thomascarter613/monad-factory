@@ -36,6 +36,7 @@ foundation
 toolchain
 ci
 github-planning
+memory
 rust
 ```
 
