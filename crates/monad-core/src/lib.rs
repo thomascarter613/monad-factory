@@ -531,6 +531,242 @@ fn add_required_file_check(
     });
 }
 
+/// Expected root toolchain files for the Monad Factory repository control plane.
+pub const EXPECTED_TOOLCHAIN_FILES: &[&str] = &[
+    "mise.toml",
+    "package.json",
+    "bun.lock",
+    "tsconfig.base.json",
+    "biome.json",
+    "lefthook.yml",
+    ".moon/workspace.yml",
+    ".moon/toolchains.yml",
+    "moon.yml",
+    "Cargo.toml",
+    "Cargo.lock",
+    "rust-toolchain.toml",
+    "rustfmt.toml",
+    ".cargo/config.toml",
+];
+
+/// Expected tool declarations in `mise.toml`.
+pub const EXPECTED_MISE_TOOLS: &[&str] = &["node", "bun", "rust", "go", "python", "java"];
+
+/// Inspection result for one expected toolchain file.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct ToolchainFile {
+    /// File path relative to the repository root.
+    pub relative_path: String,
+
+    /// Absolute file path.
+    pub path: PathBuf,
+
+    /// Whether the file exists.
+    pub exists: bool,
+}
+
+/// Inspection result for one expected declared tool in `mise.toml`.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct DeclaredTool {
+    /// Tool name.
+    pub name: String,
+
+    /// Whether the tool is declared.
+    pub declared: bool,
+
+    /// Raw configured version or channel, when present.
+    pub version: Option<String>,
+}
+
+/// Root toolchain inspection report.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct ToolchainInspection {
+    /// Canonical repository root.
+    pub root: PathBuf,
+
+    /// Expected toolchain file inspection results.
+    pub files: Vec<ToolchainFile>,
+
+    /// Expected mise tool declarations.
+    pub declared_tools: Vec<DeclaredTool>,
+
+    /// Bun package manager value from `package.json`, when present.
+    pub package_manager: Option<String>,
+
+    /// Whether package scripts include `check`.
+    pub check_script_status: CheckStatus,
+
+    /// Whether package scripts include `check:toolchain`.
+    pub toolchain_check_script_status: CheckStatus,
+
+    /// Whether package scripts include `check:rust`.
+    pub rust_check_script_status: CheckStatus,
+
+    /// Whether moon workspace configuration exists.
+    pub moon_workspace_status: CheckStatus,
+
+    /// Whether moon toolchain configuration exists.
+    pub moon_toolchains_status: CheckStatus,
+
+    /// Whether Cargo workspace configuration exists.
+    pub cargo_workspace_status: CheckStatus,
+
+    /// Rust toolchain channel from `rust-toolchain.toml`, when present.
+    pub rust_toolchain_channel: Option<String>,
+}
+
+impl ToolchainInspection {
+    /// Count present expected toolchain files.
+    #[must_use]
+    pub fn present_file_count(&self) -> usize {
+        self.files.iter().filter(|file| file.exists).count()
+    }
+
+    /// Count declared mise tools.
+    #[must_use]
+    pub fn declared_tool_count(&self) -> usize {
+        self.declared_tools
+            .iter()
+            .filter(|tool| tool.declared)
+            .count()
+    }
+
+    /// Return missing expected toolchain files.
+    #[must_use]
+    pub fn missing_file_names(&self) -> Vec<&str> {
+        self.files
+            .iter()
+            .filter(|file| !file.exists)
+            .map(|file| file.relative_path.as_str())
+            .collect()
+    }
+
+    /// Return missing expected mise tool declarations.
+    #[must_use]
+    pub fn missing_tool_names(&self) -> Vec<&str> {
+        self.declared_tools
+            .iter()
+            .filter(|tool| !tool.declared)
+            .map(|tool| tool.name.as_str())
+            .collect()
+    }
+
+    /// Return whether the root toolchain foundation is complete.
+    #[must_use]
+    pub fn is_complete(&self) -> bool {
+        self.missing_file_names().is_empty()
+            && self.missing_tool_names().is_empty()
+            && self.package_manager.is_some()
+            && self.check_script_status == CheckStatus::Pass
+            && self.toolchain_check_script_status == CheckStatus::Pass
+            && self.rust_check_script_status == CheckStatus::Pass
+            && self.moon_workspace_status == CheckStatus::Pass
+            && self.moon_toolchains_status == CheckStatus::Pass
+            && self.cargo_workspace_status == CheckStatus::Pass
+            && self.rust_toolchain_channel.is_some()
+    }
+}
+
+/// Inspect root toolchain manifests and configuration.
+///
+/// # Errors
+///
+/// Returns an error when workspace discovery fails.
+pub fn inspect_toolchain(root: &Path) -> Result<ToolchainInspection, WorkspaceInspectionError> {
+    let workspace = inspect_workspace(root)?;
+    let root = workspace.root;
+
+    let files = EXPECTED_TOOLCHAIN_FILES
+        .iter()
+        .map(|relative_path| {
+            let path = root.join(relative_path);
+
+            ToolchainFile {
+                relative_path: (*relative_path).to_string(),
+                exists: path.is_file(),
+                path,
+            }
+        })
+        .collect::<Vec<_>>();
+
+    let mise_text = read_optional(root.join("mise.toml"));
+    let package_text = read_optional(root.join("package.json"));
+    let cargo_text = read_optional(root.join("Cargo.toml"));
+    let rust_toolchain_text = read_optional(root.join("rust-toolchain.toml"));
+
+    let declared_tools = EXPECTED_MISE_TOOLS
+        .iter()
+        .map(|tool| DeclaredTool {
+            name: (*tool).to_string(),
+            declared: find_toml_assignment(&mise_text, tool).is_some(),
+            version: find_toml_assignment(&mise_text, tool),
+        })
+        .collect::<Vec<_>>();
+
+    let package_manager = find_json_string_value(&package_text, "packageManager");
+    let rust_toolchain_channel = find_toml_assignment(&rust_toolchain_text, "channel");
+
+    Ok(ToolchainInspection {
+        root: root.clone(),
+        files,
+        declared_tools,
+        package_manager,
+        check_script_status: presence_status(package_text.contains("\"check\"")),
+        toolchain_check_script_status: presence_status(
+            package_text.contains("\"check:toolchain\""),
+        ),
+        rust_check_script_status: presence_status(package_text.contains("\"check:rust\"")),
+        moon_workspace_status: presence_status(root.join(".moon/workspace.yml").is_file()),
+        moon_toolchains_status: presence_status(root.join(".moon/toolchains.yml").is_file()),
+        cargo_workspace_status: presence_status(cargo_text.contains("[workspace]")),
+        rust_toolchain_channel,
+    })
+}
+
+fn read_optional(path: PathBuf) -> String {
+    fs::read_to_string(path).unwrap_or_default()
+}
+
+fn find_toml_assignment(text: &str, key: &str) -> Option<String> {
+    let prefix = format!("{key} =");
+
+    text.lines()
+        .map(str::trim)
+        .find(|line| line.starts_with(&prefix))
+        .and_then(|line| line.split_once('='))
+        .map(|(_, value)| clean_manifest_value(value))
+        .filter(|value| !value.is_empty())
+}
+
+fn find_json_string_value(text: &str, key: &str) -> Option<String> {
+    let marker = format!("\"{key}\"");
+
+    text.lines()
+        .map(str::trim)
+        .find(|line| line.starts_with(&marker))
+        .and_then(|line| line.split_once(':'))
+        .map(|(_, value)| clean_manifest_value(value))
+        .filter(|value| !value.is_empty())
+}
+
+const fn presence_status(present: bool) -> CheckStatus {
+    if present {
+        CheckStatus::Pass
+    } else {
+        CheckStatus::Fail
+    }
+}
+
+fn clean_manifest_value(value: &str) -> String {
+    value
+        .trim()
+        .trim_end_matches(',')
+        .trim()
+        .trim_matches('"')
+        .trim_matches('\'')
+        .to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

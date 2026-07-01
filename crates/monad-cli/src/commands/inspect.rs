@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use monad_core::{inspect_workspace, WorkspaceInspection};
+use monad_core::{inspect_toolchain, inspect_workspace, ToolchainInspection, WorkspaceInspection};
 
 use crate::commands::unknown_argument;
 
@@ -15,7 +15,7 @@ pub fn render(args: &[String]) -> Result<String, String> {
     match target {
         "workspace" => workspace(),
         "scope" => Ok(scope()),
-        "toolchain" => Ok(toolchain()),
+        "toolchain" => toolchain(),
         "memory" => Ok(memory()),
         "--help" | "-h" | "help" => Ok(help()),
         unknown => Err(unknown_argument("inspect", unknown, TARGETS)),
@@ -82,7 +82,7 @@ fn render_workspace_inspection(inspection: &WorkspaceInspection) -> String {
         ));
     }
 
-    lines.extend(["foundation_files:".to_string()]);
+    lines.push("foundation_files:".to_string());
 
     for file in &inspection.foundation_files {
         lines.push(format!(
@@ -113,15 +113,101 @@ fn scope() -> String {
     .join("\n")
 }
 
-fn toolchain() -> String {
-    [
-        "inspect_target: toolchain",
-        "toolchain_manifest: mise.toml",
-        "javascript_package_manager: bun",
-        "task_orchestrator: moon",
-        "rust_workspace: Cargo.toml",
-    ]
-    .join("\n")
+fn toolchain() -> Result<String, String> {
+    let inspection = inspect_toolchain(Path::new(".")).map_err(|error| error.to_string())?;
+
+    Ok(render_toolchain_inspection(&inspection))
+}
+
+fn render_toolchain_inspection(inspection: &ToolchainInspection) -> String {
+    let missing_files = inspection.missing_file_names();
+    let missing_tools = inspection.missing_tool_names();
+
+    let mut lines = vec![
+        "inspect_target: toolchain".to_string(),
+        "engine: native".to_string(),
+        format!("workspace_root: {}", inspection.root.display()),
+        format!(
+            "toolchain_files_present: {}/{}",
+            inspection.present_file_count(),
+            inspection.files.len()
+        ),
+        format!(
+            "mise_tools_declared: {}/{}",
+            inspection.declared_tool_count(),
+            inspection.declared_tools.len()
+        ),
+        format!(
+            "missing_toolchain_files: {}",
+            render_missing_values(&missing_files)
+        ),
+        format!(
+            "missing_mise_tools: {}",
+            render_missing_values(&missing_tools)
+        ),
+        format!(
+            "package_manager: {}",
+            inspection.package_manager.as_deref().unwrap_or("missing")
+        ),
+        format!(
+            "rust_toolchain_channel: {}",
+            inspection
+                .rust_toolchain_channel
+                .as_deref()
+                .unwrap_or("missing")
+        ),
+        format!("check_script_status: {}", inspection.check_script_status),
+        format!(
+            "toolchain_check_script_status: {}",
+            inspection.toolchain_check_script_status
+        ),
+        format!(
+            "rust_check_script_status: {}",
+            inspection.rust_check_script_status
+        ),
+        format!(
+            "moon_workspace_status: {}",
+            inspection.moon_workspace_status
+        ),
+        format!(
+            "moon_toolchains_status: {}",
+            inspection.moon_toolchains_status
+        ),
+        format!(
+            "cargo_workspace_status: {}",
+            inspection.cargo_workspace_status
+        ),
+        format!(
+            "status: {}",
+            if inspection.is_complete() {
+                "complete"
+            } else {
+                "incomplete"
+            }
+        ),
+        "declared_tools:".to_string(),
+    ];
+
+    for tool in &inspection.declared_tools {
+        lines.push(format!(
+            "  - {}: {} version={}",
+            tool.name,
+            if tool.declared { "present" } else { "missing" },
+            tool.version.as_deref().unwrap_or("missing")
+        ));
+    }
+
+    lines.push("toolchain_files:".to_string());
+
+    for file in &inspection.files {
+        lines.push(format!(
+            "  - {}: {}",
+            file.relative_path,
+            if file.exists { "present" } else { "missing" }
+        ));
+    }
+
+    lines.join("\n")
 }
 
 fn memory() -> String {
@@ -175,6 +261,19 @@ mod tests {
         assert!(output.contains("foundation_files_present:"));
         assert!(output.contains("domains:"));
         assert!(output.contains("foundation_files:"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn renders_real_toolchain_inspection() -> Result<(), String> {
+        let output = render(&args(&["toolchain"]))?;
+
+        assert!(output.contains("inspect_target: toolchain"));
+        assert!(output.contains("engine: native"));
+        assert!(output.contains("toolchain_files_present:"));
+        assert!(output.contains("mise_tools_declared:"));
+        assert!(output.contains("declared_tools:"));
 
         Ok(())
     }
