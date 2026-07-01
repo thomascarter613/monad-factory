@@ -5,7 +5,10 @@ use std::fmt::{Display, Formatter};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+mod graph;
 mod memory;
+
+pub use graph::{build_repository_graph, GraphEdge, GraphNode, GraphRenderFormat, RepositoryGraph};
 
 pub use memory::{
     inspect_memory, run_memory_check, MemoryBackend, MemoryCheckItem, MemoryCheckReport,

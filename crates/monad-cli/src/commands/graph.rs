@@ -1,100 +1,30 @@
 //! Graph command renderer.
 
+use std::path::Path;
+
+use monad_core::{build_repository_graph, GraphRenderFormat};
+
 use crate::commands::unknown_argument;
 
 const FORMATS: &[&str] = &["text", "json", "mermaid", "dot"];
 
+/// Render a graph command response.
 pub fn render(args: &[String]) -> Result<String, String> {
-    let format = args.first().map_or("text", String::as_str);
+    let format_name = args.first().map_or("text", String::as_str);
 
-    match format {
-        "text" => Ok(text()),
-        "json" => Ok(json()),
-        "mermaid" => Ok(mermaid()),
-        "dot" => Ok(dot()),
+    match format_name {
         "--help" | "-h" | "help" => Ok(help()),
-        unknown => Err(unknown_argument("graph", unknown, FORMATS)),
+        value => {
+            let Some(format) = GraphRenderFormat::parse(value) else {
+                return Err(unknown_argument("graph", value, FORMATS));
+            };
+
+            let graph =
+                build_repository_graph(Path::new(".")).map_err(|error| error.to_string())?;
+
+            Ok(graph.render(format))
+        }
     }
-}
-
-fn text() -> String {
-    [
-        "graph_format: text",
-        "nodes:",
-        "  - repo",
-        "  - apps",
-        "  - packages",
-        "  - services",
-        "  - crates",
-        "  - infra",
-        "  - policies",
-        "  - memory",
-        "edges:",
-        "  - repo -> apps",
-        "  - repo -> packages",
-        "  - repo -> services",
-        "  - repo -> crates",
-        "  - repo -> infra",
-        "  - repo -> policies",
-        "  - repo -> memory",
-    ]
-    .join("\n")
-}
-
-fn json() -> String {
-    [
-        "{",
-        "  \"format\": \"json\",",
-        "  \"nodes\": [\"repo\", \"apps\", \"packages\", \"services\", \"crates\", \"infra\", \"policies\", \"memory\"],",
-        "  \"edges\": [",
-        "    [\"repo\", \"apps\"],",
-        "    [\"repo\", \"packages\"],",
-        "    [\"repo\", \"services\"],",
-        "    [\"repo\", \"crates\"],",
-        "    [\"repo\", \"infra\"],",
-        "    [\"repo\", \"policies\"],",
-        "    [\"repo\", \"memory\"]",
-        "  ]",
-        "}",
-    ]
-    .join("\n")
-}
-
-fn mermaid() -> String {
-    [
-        "graph TD",
-        "  repo[repo]",
-        "  apps[apps]",
-        "  packages[packages]",
-        "  services[services]",
-        "  crates[crates]",
-        "  infra[infra]",
-        "  policies[policies]",
-        "  memory[memory]",
-        "  repo --> apps",
-        "  repo --> packages",
-        "  repo --> services",
-        "  repo --> crates",
-        "  repo --> infra",
-        "  repo --> policies",
-        "  repo --> memory",
-    ]
-    .join("\n")
-}
-
-fn dot() -> String {
-    [
-        "digraph monad_factory {",
-        "  repo -> apps;",
-        "  repo -> packages;",
-        "  repo -> services;",
-        "  repo -> crates;",
-        "  repo -> infra;",
-        "  repo -> policies;",
-        "  repo -> memory;",
-        "}",
-    ]
-    .join("\n")
 }
 
 fn help() -> String {
@@ -120,11 +50,22 @@ mod tests {
     }
 
     #[test]
+    fn renders_text() -> Result<(), String> {
+        let output = render(&args(&["text"]))?;
+
+        assert!(output.contains("graph_format: text"));
+        assert!(output.contains("engine: native"));
+        assert!(output.contains("nodes:"));
+
+        Ok(())
+    }
+
+    #[test]
     fn renders_mermaid() -> Result<(), String> {
         let output = render(&args(&["mermaid"]))?;
 
         assert!(output.contains("graph TD"));
-        assert!(output.contains("repo --> crates"));
+        assert!(output.contains("repo -->|contains| crates"));
 
         Ok(())
     }
@@ -134,7 +75,18 @@ mod tests {
         let output = render(&args(&["json"]))?;
 
         assert!(output.contains("\"format\": \"json\""));
+        assert!(output.contains("\"engine\": \"native\""));
         assert!(output.contains("\"nodes\""));
+
+        Ok(())
+    }
+
+    #[test]
+    fn renders_dot() -> Result<(), String> {
+        let output = render(&args(&["dot"]))?;
+
+        assert!(output.contains("digraph monad_factory"));
+        assert!(output.contains("repo -> crates"));
 
         Ok(())
     }

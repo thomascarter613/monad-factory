@@ -19,6 +19,7 @@ required_files = [
     "crates/monad-core/Cargo.toml",
     "crates/monad-core/src/lib.rs",
         "crates/monad-core/src/memory.rs",
+        "crates/monad-core/src/graph.rs",
     "crates/monad-cli/Cargo.toml",
     "crates/monad-cli/src/main.rs",
         "crates/monad-cli/src/cli.rs",
@@ -38,6 +39,7 @@ required_files = [
         "docs/cli/memory-inspection.md",
         "docs/cli/memory-check.md",
         "docs/cli/memory-command.md",
+        "docs/cli/graph-command.md",
 ]
 
 required_crates = [
@@ -104,10 +106,10 @@ cargo run -p monad-cli -- check foundation | grep "engine: native" >/dev/null
 cargo run -p monad-cli -- inspect workspace | grep "workspace_manifest_loaded: true" >/dev/null
 cargo run -p monad-cli -- inspect scope >/dev/null
 cargo run -p monad-cli -- inspect toolchain | grep "engine: native" >/dev/null
-cargo run -p monad-cli -- graph text >/dev/null
-cargo run -p monad-cli -- graph json >/dev/null
-cargo run -p monad-cli -- graph mermaid >/dev/null
-cargo run -p monad-cli -- graph dot >/dev/null
+cargo run -p monad-cli -- graph text | grep "engine: native" >/dev/null
+cargo run -p monad-cli -- graph json | grep "\"engine\": \"native\"" >/dev/null
+cargo run -p monad-cli -- graph mermaid | grep "graph TD" >/dev/null
+cargo run -p monad-cli -- graph dot | grep "digraph monad_factory" >/dev/null
 cargo run -p monad-cli -- context help >/dev/null
 cargo run -p monad-cli -- context pack >/dev/null
 cargo run -p monad-cli -- memory status | grep "engine: native" >/dev/null
