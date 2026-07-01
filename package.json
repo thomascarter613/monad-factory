@@ -39,7 +39,13 @@
     "rust:clippy": "cargo clippy --workspace --all-targets -- -D warnings",
     "rust:test": "cargo test --workspace --all-targets",
     "monad:help": "cargo run -p monad-cli -- help",
-    "monad:version": "cargo run -p monad-cli -- version"
+    "monad:version": "cargo run -p monad-cli -- version",
+    "monad:info": "cargo run -p monad-cli -- info",
+    "monad:check": "cargo run -p monad-cli -- check all",
+    "monad:inspect": "cargo run -p monad-cli -- inspect workspace",
+    "monad:graph": "cargo run -p monad-cli -- graph text",
+    "monad:context": "cargo run -p monad-cli -- context help",
+    "monad:memory": "cargo run -p monad-cli -- memory status"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",

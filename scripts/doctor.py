@@ -141,7 +141,15 @@ class Doctor:
             "hooks:install",
             "lint",
             "moon:check",
-            "moon:version",
+            "monad:version",
+                "monad:memory",
+                "monad:inspect",
+                "monad:info",
+                "monad:help",
+                "monad:graph",
+                "monad:context",
+                "monad:check",
+                "moon:version",
             "typecheck",
         ]
 
