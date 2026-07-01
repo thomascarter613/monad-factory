@@ -18,6 +18,7 @@ required_files = [
     ".cargo/config.toml",
     "crates/monad-core/Cargo.toml",
     "crates/monad-core/src/lib.rs",
+        "crates/monad-core/src/memory.rs",
     "crates/monad-cli/Cargo.toml",
     "crates/monad-cli/src/main.rs",
         "crates/monad-cli/src/cli.rs",
@@ -34,6 +35,7 @@ required_files = [
         "docs/cli/foundation-check.md",
         "docs/cli/toolchain-inspection.md",
         "docs/cli/toolchain-check.md",
+        "docs/cli/memory-inspection.md",
 ]
 
 required_crates = [

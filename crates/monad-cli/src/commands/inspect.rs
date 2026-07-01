@@ -2,7 +2,10 @@
 
 use std::path::Path;
 
-use monad_core::{inspect_toolchain, inspect_workspace, ToolchainInspection, WorkspaceInspection};
+use monad_core::{
+    inspect_memory, inspect_toolchain, inspect_workspace, MemoryInspection, ToolchainInspection,
+    WorkspaceInspection,
+};
 
 use crate::commands::unknown_argument;
 
@@ -16,7 +19,7 @@ pub fn render(args: &[String]) -> Result<String, String> {
         "workspace" => workspace(),
         "scope" => Ok(scope()),
         "toolchain" => toolchain(),
-        "memory" => Ok(memory()),
+        "memory" => memory(),
         "--help" | "-h" | "help" => Ok(help()),
         unknown => Err(unknown_argument("inspect", unknown, TARGETS)),
     }
@@ -210,14 +213,73 @@ fn render_toolchain_inspection(inspection: &ToolchainInspection) -> String {
     lines.join("\n")
 }
 
-fn memory() -> String {
-    [
-        "inspect_target: memory",
-        "memory_index: .monad/memory/MEMORY.md",
-        "policy: policies/memory/memory-policy.md",
-        "planned_backends: sqlite, pgvector, qdrant",
-    ]
-    .join("\n")
+fn memory() -> Result<String, String> {
+    let inspection = inspect_memory(Path::new(".")).map_err(|error| error.to_string())?;
+
+    Ok(render_memory_inspection(&inspection))
+}
+
+fn render_memory_inspection(inspection: &MemoryInspection) -> String {
+    let missing_files = inspection.missing_file_names();
+
+    let mut lines = vec![
+        "inspect_target: memory".to_string(),
+        "engine: native".to_string(),
+        format!("workspace_root: {}", inspection.root.display()),
+        format!(
+            "memory_files_present: {}/{}",
+            inspection.present_file_count(),
+            inspection.files.len()
+        ),
+        format!(
+            "memory_backends_registered: {}/{}",
+            inspection.registered_backend_count(),
+            inspection.backends.len()
+        ),
+        format!(
+            "missing_memory_files: {}",
+            render_missing_values(&missing_files)
+        ),
+        format!(
+            "local_first_policy_status: {}",
+            inspection.local_first_policy_status
+        ),
+        format!(
+            "inspectable_policy_status: {}",
+            inspection.inspectable_policy_status
+        ),
+        format!(
+            "policy_governed_status: {}",
+            inspection.policy_governed_status
+        ),
+        format!(
+            "status: {}",
+            if inspection.is_complete() {
+                "complete"
+            } else {
+                "incomplete"
+            }
+        ),
+        "memory_files:".to_string(),
+    ];
+
+    for file in &inspection.files {
+        lines.push(format!(
+            "  - {}: {} lines={}",
+            file.relative_path, file.status, file.line_count
+        ));
+    }
+
+    lines.push("memory_backends:".to_string());
+
+    for backend in &inspection.backends {
+        lines.push(format!(
+            "  - {}: {} role={}",
+            backend.name, backend.status, backend.role
+        ));
+    }
+
+    lines.join("\n")
 }
 
 fn help() -> String {
@@ -274,6 +336,19 @@ mod tests {
         assert!(output.contains("toolchain_files_present:"));
         assert!(output.contains("mise_tools_declared:"));
         assert!(output.contains("declared_tools:"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn renders_real_memory_inspection() -> Result<(), String> {
+        let output = render(&args(&["memory"]))?;
+
+        assert!(output.contains("inspect_target: memory"));
+        assert!(output.contains("engine: native"));
+        assert!(output.contains("memory_files_present:"));
+        assert!(output.contains("memory_backends_registered:"));
+        assert!(output.contains("memory_backends:"));
 
         Ok(())
     }
