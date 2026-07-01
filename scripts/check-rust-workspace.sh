@@ -21,6 +21,7 @@ required_files = [
         "crates/monad-core/src/memory.rs",
         "crates/monad-core/src/graph.rs",
         "crates/monad-core/src/context_foundation.rs",
+        "crates/monad-core/src/aggregate_check.rs",
     "crates/monad-cli/Cargo.toml",
     "crates/monad-cli/src/main.rs",
         "crates/monad-cli/src/cli.rs",
@@ -42,6 +43,7 @@ required_files = [
         "docs/cli/memory-command.md",
         "docs/cli/graph-command.md",
         "docs/cli/context-command.md",
+        "docs/cli/all-check.md",
 ]
 
 required_crates = [
@@ -101,7 +103,7 @@ cargo test --workspace --all-targets
 cargo run -p monad-cli -- help >/dev/null
 cargo run -p monad-cli -- version >/dev/null
 cargo run -p monad-cli -- info >/dev/null
-cargo run -p monad-cli -- check all >/dev/null
+cargo run -p monad-cli -- check all | grep "engine: native" >/dev/null
 cargo run -p monad-cli -- check toolchain | grep "engine: native" >/dev/null
 cargo run -p monad-cli -- check memory | grep "engine: native" >/dev/null
 cargo run -p monad-cli -- check foundation | grep "engine: native" >/dev/null

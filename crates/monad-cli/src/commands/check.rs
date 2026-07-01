@@ -3,8 +3,8 @@
 use std::path::Path;
 
 use monad_core::{
-    run_foundation_check, run_memory_check, run_toolchain_check, FoundationCheckReport,
-    MemoryCheckReport, ToolchainCheckReport,
+    run_all_checks, run_foundation_check, run_memory_check, run_toolchain_check,
+    AggregateCheckReport, FoundationCheckReport, MemoryCheckReport, ToolchainCheckReport,
 };
 
 use crate::commands::unknown_argument;
@@ -24,7 +24,7 @@ pub fn render(args: &[String]) -> Result<String, String> {
     let target = args.first().map_or("all", String::as_str);
 
     match target {
-        "all" => Ok(response("all", "bun run check")),
+        "all" => all(),
         "foundation" => foundation(),
         "toolchain" => toolchain(),
         "memory" => memory(),
@@ -34,6 +34,12 @@ pub fn render(args: &[String]) -> Result<String, String> {
         "--help" | "-h" | "help" => Ok(help()),
         unknown => Err(unknown_argument("check", unknown, TARGETS)),
     }
+}
+
+fn all() -> Result<String, String> {
+    let report = run_all_checks(Path::new(".")).map_err(|error| error.to_string())?;
+
+    Ok(render_all_report(&report))
 }
 
 fn foundation() -> Result<String, String> {
@@ -52,6 +58,28 @@ fn memory() -> Result<String, String> {
     let report = run_memory_check(Path::new(".")).map_err(|error| error.to_string())?;
 
     Ok(render_memory_report(&report))
+}
+
+fn render_all_report(report: &AggregateCheckReport) -> String {
+    let mut lines = vec![
+        "check_target: all".to_string(),
+        "engine: native".to_string(),
+        format!("workspace_root: {}", report.root.display()),
+        format!("status: {}", report.status),
+        format!("pass_count: {}", report.pass_count()),
+        format!("warn_count: {}", report.warn_count()),
+        format!("fail_count: {}", report.fail_count()),
+        "items:".to_string(),
+    ];
+
+    for item in &report.items {
+        lines.push(format!(
+            "  - {}: {} - {}",
+            item.name, item.status, item.message
+        ));
+    }
+
+    lines.join("\n")
 }
 
 fn render_foundation_report(report: &FoundationCheckReport) -> String {
@@ -186,11 +214,12 @@ mod tests {
     }
 
     #[test]
-    fn defaults_to_all() -> Result<(), String> {
+    fn defaults_to_native_all() -> Result<(), String> {
         let output = render(&args(&[]))?;
 
         assert!(output.contains("check_target: all"));
-        assert!(output.contains("bun run check"));
+        assert!(output.contains("engine: native"));
+        assert!(output.contains("items:"));
 
         Ok(())
     }

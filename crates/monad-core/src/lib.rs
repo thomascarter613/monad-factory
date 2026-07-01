@@ -5,9 +5,12 @@ use std::fmt::{Display, Formatter};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+mod aggregate_check;
 mod context_foundation;
 mod graph;
 mod memory;
+
+pub use aggregate_check::{run_all_checks, AggregateCheckItem, AggregateCheckReport};
 
 pub use context_foundation::{
     inspect_context_foundation, ContextArtifact, ContextArtifactSpec, ContextFoundation,
