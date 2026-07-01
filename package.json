@@ -13,7 +13,7 @@
     "templates/*"
   ],
   "scripts": {
-    "check": "bun run check:foundation && bun run check:toolchain && bun run check:ci && bun run check:github-planning && bun run doctor:ci && bun run format:check",
+    "check": "bun run check:foundation && bun run check:toolchain && bun run check:ci && bun run check:github-planning && bun run check:rust && bun run doctor:ci && bun run format:check",
     "check:foundation": "bash scripts/check-foundation.sh",
     "check:toolchain": "bash scripts/check-root-toolchain.sh",
     "doctor": "python3 scripts/doctor.py",
@@ -31,7 +31,15 @@
     "github:issues:dry-run": "python3 scripts/github/create-issues.py --dry-run",
     "github:issues": "bash scripts/github/create-issues.sh",
     "doctor:ci": "python3 scripts/doctor.py --ci",
-    "doctor:strict": "python3 scripts/doctor.py --strict"
+    "doctor:strict": "python3 scripts/doctor.py --strict",
+    "check:rust": "bash scripts/check-rust-workspace.sh",
+    "rust:check": "cargo check --workspace --all-targets",
+    "rust:fmt": "cargo fmt --all",
+    "rust:fmt:check": "cargo fmt --all -- --check",
+    "rust:clippy": "cargo clippy --workspace --all-targets -- -D warnings",
+    "rust:test": "cargo test --workspace --all-targets",
+    "monad:help": "cargo run -p monad-cli -- help",
+    "monad:version": "cargo run -p monad-cli -- version"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",

@@ -1,0 +1,37 @@
+[workspace]
+  members = [
+    "crates/monad-core",
+"crates/monad-config",
+"crates/monad-context",
+"crates/monad-memory",
+"crates/monad-policy",
+"crates/monad-template",
+"crates/monad-plugin",
+"crates/monad-deploy",
+"crates/monad-agent",
+"crates/monad-nx-adapter",
+"crates/monad-marketplace",
+"crates/monad-cli"
+  ]
+  resolver = "2"
+
+  [workspace.package]
+  version = "0.1.0"
+  edition = "2021"
+  license = "MIT"
+  repository = "https://github.com/thomascarter613/monad-factory"
+  rust-version = "1.85"
+
+  [workspace.lints.rust]
+  unsafe_code = "forbid"
+  missing_docs = "warn"
+
+  [workspace.lints.clippy]
+  all = "warn"
+  pedantic = "warn"
+  nursery = "warn"
+  unwrap_used = "warn"
+  expect_used = "warn"
+  panic = "warn"
+  todo = "warn"
+  unimplemented = "warn"

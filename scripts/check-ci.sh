@@ -43,7 +43,8 @@ required_workflow_fragments = [
     "bun run check:ci",
     "bun run check:foundation",
     "bun run check:toolchain",
-    "bun run doctor:ci",
+    "bun run check:rust",
+        "bun run doctor:ci",
         "bun run typecheck",
     "bun run format:check",
     "bun run moon:version",
@@ -71,7 +72,8 @@ required_scripts = [
     "check:toolchain",
     "format:check",
     "moon:version",
-    "doctor:ci",
+    "check:rust",
+        "doctor:ci",
         "typecheck",
 ]
 

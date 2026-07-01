@@ -1,0 +1,18 @@
+[package]
+name = "monad-memory"
+description = "Local-first memory abstractions for Monad Memory."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "monad_memory"
+path = "src/lib.rs"
+
+[dependencies]
+monad-core = { path = "../monad-core" }
+
+[lints]
+workspace = true

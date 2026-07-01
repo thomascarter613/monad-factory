@@ -1,0 +1,18 @@
+[package]
+name = "monad-plugin"
+description = "Plugin system contracts for Monad Factory."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "monad_plugin"
+path = "src/lib.rs"
+
+[dependencies]
+monad-core = { path = "../monad-core" }
+
+[lints]
+workspace = true

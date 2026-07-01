@@ -1,0 +1,18 @@
+[package]
+name = "monad-agent"
+description = "Agent workflow primitives for governed AI-assisted development."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "monad_agent"
+path = "src/lib.rs"
+
+[dependencies]
+monad-core = { path = "../monad-core" }
+
+[lints]
+workspace = true

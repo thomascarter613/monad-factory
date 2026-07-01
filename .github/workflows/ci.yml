@@ -45,6 +45,12 @@ jobs:
       - name: Validate root toolchain files
         run: bun run check:toolchain
 
+      - name: Set up Rust
+        run: rustup toolchain install stable --profile minimal --component rustfmt,clippy
+
+      - name: Rust workspace check
+        run: bun run check:rust
+
       - name: Repository doctor check
         run: bun run doctor:ci
 

@@ -76,6 +76,12 @@ class Doctor:
             "scripts/check-root-toolchain.sh",
             "scripts/check-ci.sh",
             "scripts/github/check-github-planning.py",
+                "Cargo.toml",
+                "Cargo.lock",
+                "rust-toolchain.toml",
+                "rustfmt.toml",
+                ".cargo/config.toml",
+                "scripts/check-rust-workspace.sh",
         ]
 
         missing = [path for path in required_files if not (ROOT / path).is_file()]
@@ -208,6 +214,8 @@ class Doctor:
             "bun": ["bun", "--version"],
             "node": ["node", "--version"],
             "python3": ["python3", "--version"],
+                "cargo": ["cargo", "--version"],
+                "rustc": ["rustc", "--version"],
         }
 
         for name, command in commands.items():
@@ -276,6 +284,7 @@ class Doctor:
             ("root toolchain", ["bash", "scripts/check-root-toolchain.sh"]),
             ("CI config", ["bash", "scripts/check-ci.sh"]),
             ("GitHub planning", ["python3", "scripts/github/check-github-planning.py"]),
+                ("Rust workspace", ["bash", "scripts/check-rust-workspace.sh"]),
         ]
 
         for name, command in checks:

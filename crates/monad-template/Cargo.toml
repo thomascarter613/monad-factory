@@ -1,0 +1,18 @@
+[package]
+name = "monad-template"
+description = "Template generation primitives for Monad Factory."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "monad_template"
+path = "src/lib.rs"
+
+[dependencies]
+monad-core = { path = "../monad-core" }
+
+[lints]
+workspace = true

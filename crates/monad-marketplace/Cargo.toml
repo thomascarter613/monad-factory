@@ -1,0 +1,18 @@
+[package]
+name = "monad-marketplace"
+description = "Marketplace catalog, manifest, and trust foundation primitives."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "monad_marketplace"
+path = "src/lib.rs"
+
+[dependencies]
+monad-core = { path = "../monad-core" }
+
+[lints]
+workspace = true
