@@ -37,6 +37,7 @@ required_files = [
         "docs/cli/toolchain-check.md",
         "docs/cli/memory-inspection.md",
         "docs/cli/memory-check.md",
+        "docs/cli/memory-command.md",
 ]
 
 required_crates = [
@@ -109,8 +110,9 @@ cargo run -p monad-cli -- graph mermaid >/dev/null
 cargo run -p monad-cli -- graph dot >/dev/null
 cargo run -p monad-cli -- context help >/dev/null
 cargo run -p monad-cli -- context pack >/dev/null
-cargo run -p monad-cli -- memory status >/dev/null
-cargo run -p monad-cli -- memory backends >/dev/null
+cargo run -p monad-cli -- memory status | grep "engine: native" >/dev/null
+cargo run -p monad-cli -- memory backends | grep "engine: native" >/dev/null
+cargo run -p monad-cli -- memory policy | grep "engine: native" >/dev/null
 
 
 echo "Rust workspace checks passed"

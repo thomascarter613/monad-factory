@@ -11,3 +11,4 @@ Monad Factory exposes the public `monad` CLI as the governed repository and prod
 - [Native Toolchain Check](./toolchain-check.md)
 - [Memory Inspection](./memory-inspection.md)
 - [Native Memory Check](./memory-check.md)
+- [Native Memory Command Group](./memory-command.md)
