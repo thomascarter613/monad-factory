@@ -326,6 +326,211 @@ fn count_directory_entries(path: &Path) -> Result<usize, WorkspaceInspectionErro
         })
 }
 
+/// Status for a native foundation check.
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum CheckStatus {
+    /// The check passed.
+    Pass,
+
+    /// The check produced a non-fatal warning.
+    Warn,
+
+    /// The check failed.
+    Fail,
+}
+
+impl CheckStatus {
+    /// Return a stable lowercase status string.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Pass => "pass",
+            Self::Warn => "warn",
+            Self::Fail => "fail",
+        }
+    }
+}
+
+impl Display for CheckStatus {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
+/// One native foundation check item.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct FoundationCheckItem {
+    /// Stable item name.
+    pub name: String,
+
+    /// Check status.
+    pub status: CheckStatus,
+
+    /// Human-readable check message.
+    pub message: String,
+}
+
+/// Native foundation check report.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct FoundationCheckReport {
+    /// Workspace root used for the check.
+    pub root: PathBuf,
+
+    /// Overall check status.
+    pub status: CheckStatus,
+
+    /// Individual check items.
+    pub items: Vec<FoundationCheckItem>,
+
+    /// Workspace inspection used by the check.
+    pub inspection: WorkspaceInspection,
+}
+
+impl FoundationCheckReport {
+    /// Count passing check items.
+    #[must_use]
+    pub fn pass_count(&self) -> usize {
+        self.items
+            .iter()
+            .filter(|item| item.status == CheckStatus::Pass)
+            .count()
+    }
+
+    /// Count warning check items.
+    #[must_use]
+    pub fn warn_count(&self) -> usize {
+        self.items
+            .iter()
+            .filter(|item| item.status == CheckStatus::Warn)
+            .count()
+    }
+
+    /// Count failing check items.
+    #[must_use]
+    pub fn fail_count(&self) -> usize {
+        self.items
+            .iter()
+            .filter(|item| item.status == CheckStatus::Fail)
+            .count()
+    }
+}
+
+/// Run the native Monad Factory foundation check.
+///
+/// # Errors
+///
+/// Returns an error when workspace inspection fails.
+pub fn run_foundation_check(
+    root: &Path,
+) -> Result<FoundationCheckReport, WorkspaceInspectionError> {
+    let inspection = inspect_workspace(root)?;
+    let mut items = Vec::new();
+
+    items.push(FoundationCheckItem {
+        name: "workspace-manifest".to_string(),
+        status: CheckStatus::Pass,
+        message: format!(
+            "`workspace.toml` loaded with {} line(s)",
+            inspection.workspace_manifest_line_count
+        ),
+    });
+
+    let missing_domains = inspection.missing_domain_names();
+    items.push(FoundationCheckItem {
+        name: "top-level-domains".to_string(),
+        status: if missing_domains.is_empty() {
+            CheckStatus::Pass
+        } else {
+            CheckStatus::Fail
+        },
+        message: if missing_domains.is_empty() {
+            format!(
+                "all {} expected top-level domains are present",
+                inspection.domains.len()
+            )
+        } else {
+            format!("missing domains: {}", missing_domains.join(", "))
+        },
+    });
+
+    let missing_files = inspection.missing_foundation_file_names();
+    items.push(FoundationCheckItem {
+        name: "foundation-files".to_string(),
+        status: if missing_files.is_empty() {
+            CheckStatus::Pass
+        } else {
+            CheckStatus::Fail
+        },
+        message: if missing_files.is_empty() {
+            format!(
+                "all {} expected foundation files are present",
+                inspection.foundation_files.len()
+            )
+        } else {
+            format!("missing files: {}", missing_files.join(", "))
+        },
+    });
+
+    add_required_file_check(
+        &mut items,
+        &inspection,
+        "canonical-v1-scope",
+        "docs/product/v1-maximal-functional-scope-and-delivery-plan.md",
+    );
+
+    add_required_file_check(
+        &mut items,
+        &inspection,
+        "monad-memory-index",
+        ".monad/memory/MEMORY.md",
+    );
+
+    add_required_file_check(&mut items, &inspection, "rust-workspace", "Cargo.toml");
+
+    add_required_file_check(&mut items, &inspection, "root-toolchain", "mise.toml");
+
+    let status = if items.iter().any(|item| item.status == CheckStatus::Fail) {
+        CheckStatus::Fail
+    } else if items.iter().any(|item| item.status == CheckStatus::Warn) {
+        CheckStatus::Warn
+    } else {
+        CheckStatus::Pass
+    };
+
+    Ok(FoundationCheckReport {
+        root: inspection.root.clone(),
+        status,
+        items,
+        inspection,
+    })
+}
+
+fn add_required_file_check(
+    items: &mut Vec<FoundationCheckItem>,
+    inspection: &WorkspaceInspection,
+    name: &str,
+    relative_path: &str,
+) {
+    let exists = inspection
+        .foundation_files
+        .iter()
+        .any(|file| file.relative_path == relative_path && file.exists);
+
+    items.push(FoundationCheckItem {
+        name: name.to_string(),
+        status: if exists {
+            CheckStatus::Pass
+        } else {
+            CheckStatus::Fail
+        },
+        message: if exists {
+            format!("required file `{relative_path}` is present")
+        } else {
+            format!("required file `{relative_path}` is missing")
+        },
+    });
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -399,6 +604,35 @@ mod tests {
 
         assert!(inspection.missing_domain_names().contains(&"apps"));
         assert!(!inspection.is_complete());
+
+        fs::remove_dir_all(root)?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn foundation_check_passes_for_complete_workspace() -> Result<(), Box<dyn Error>> {
+        let root = test_workspace("foundation-pass")?;
+        let report = run_foundation_check(&root)?;
+
+        assert_eq!(report.status, CheckStatus::Pass);
+        assert_eq!(report.fail_count(), 0);
+        assert!(report.pass_count() > 0);
+
+        fs::remove_dir_all(root)?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn foundation_check_fails_for_missing_file() -> Result<(), Box<dyn Error>> {
+        let root = test_workspace("foundation-fail")?;
+        fs::remove_file(root.join(".monad/memory/MEMORY.md"))?;
+
+        let report = run_foundation_check(&root)?;
+
+        assert_eq!(report.status, CheckStatus::Fail);
+        assert!(report.fail_count() > 0);
 
         fs::remove_dir_all(root)?;
 

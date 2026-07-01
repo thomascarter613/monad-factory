@@ -1,5 +1,9 @@
 //! Check command renderer.
 
+use std::path::Path;
+
+use monad_core::{run_foundation_check, FoundationCheckReport};
+
 use crate::commands::unknown_argument;
 
 const TARGETS: &[&str] = &[
@@ -11,12 +15,13 @@ const TARGETS: &[&str] = &[
     "rust",
 ];
 
+/// Render a check command response.
 pub fn render(args: &[String]) -> Result<String, String> {
     let target = args.first().map_or("all", String::as_str);
 
     match target {
         "all" => Ok(response("all", "bun run check")),
-        "foundation" => Ok(response("foundation", "bun run check:foundation")),
+        "foundation" => foundation(),
         "toolchain" => Ok(response("toolchain", "bun run check:toolchain")),
         "ci" => Ok(response("ci", "bun run check:ci")),
         "github-planning" => Ok(response("github-planning", "bun run check:github-planning")),
@@ -24,6 +29,44 @@ pub fn render(args: &[String]) -> Result<String, String> {
         "--help" | "-h" | "help" => Ok(help()),
         unknown => Err(unknown_argument("check", unknown, TARGETS)),
     }
+}
+
+fn foundation() -> Result<String, String> {
+    let report = run_foundation_check(Path::new(".")).map_err(|error| error.to_string())?;
+
+    Ok(render_foundation_report(&report))
+}
+
+fn render_foundation_report(report: &FoundationCheckReport) -> String {
+    let mut lines = vec![
+        "check_target: foundation".to_string(),
+        "engine: native".to_string(),
+        format!("workspace_root: {}", report.root.display()),
+        format!("status: {}", report.status),
+        format!("pass_count: {}", report.pass_count()),
+        format!("warn_count: {}", report.warn_count()),
+        format!("fail_count: {}", report.fail_count()),
+        format!(
+            "top_level_domains_present: {}/{}",
+            report.inspection.present_domain_count(),
+            report.inspection.domains.len()
+        ),
+        format!(
+            "foundation_files_present: {}/{}",
+            report.inspection.present_foundation_file_count(),
+            report.inspection.foundation_files.len()
+        ),
+        "items:".to_string(),
+    ];
+
+    for item in &report.items {
+        lines.push(format!(
+            "  - {}: {} - {}",
+            item.name, item.status, item.message
+        ));
+    }
+
+    lines.join("\n")
 }
 
 fn response(target: &str, delegated_command: &str) -> String {
@@ -76,6 +119,17 @@ mod tests {
 
         assert!(output.contains("check_target: rust"));
         assert!(output.contains("bun run check:rust"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn renders_native_foundation_check() -> Result<(), String> {
+        let output = render(&args(&["foundation"]))?;
+
+        assert!(output.contains("check_target: foundation"));
+        assert!(output.contains("engine: native"));
+        assert!(output.contains("items:"));
 
         Ok(())
     }
