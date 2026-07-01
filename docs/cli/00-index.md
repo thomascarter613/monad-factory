@@ -5,3 +5,4 @@ Monad Factory exposes the public `monad` CLI as the governed repository and prod
 ## Documents
 
 - [Command Surface](./command-surface.md)
+- [Workspace Inspection](./workspace-inspection.md)

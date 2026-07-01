@@ -30,6 +30,7 @@ required_files = [
         "crates/monad-cli/src/commands/memory.rs",
         "docs/cli/00-index.md",
         "docs/cli/command-surface.md",
+        "docs/cli/workspace-inspection.md",
 ]
 
 required_crates = [
@@ -91,7 +92,7 @@ cargo run -p monad-cli -- version >/dev/null
 cargo run -p monad-cli -- info >/dev/null
 cargo run -p monad-cli -- check all >/dev/null
 cargo run -p monad-cli -- check foundation >/dev/null
-cargo run -p monad-cli -- inspect workspace >/dev/null
+cargo run -p monad-cli -- inspect workspace | grep "workspace_manifest_loaded: true" >/dev/null
 cargo run -p monad-cli -- inspect scope >/dev/null
 cargo run -p monad-cli -- graph text >/dev/null
 cargo run -p monad-cli -- graph json >/dev/null
