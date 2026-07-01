@@ -1,0 +1,45 @@
+[workspace]
+name = "monad-os"
+stage = "pre-implementation-architecture-and-product-strategy"
+description = "AI-agnostic SDLC control plane and monorepo operating system."
+private = true
+
+[identity]
+category = "AI-native SDLC Control Plane"
+product = "Monad OS"
+technical_identity = "Monorepo Operating System"
+commercial_identity = "Governed software delivery platform for AI-era engineering teams"
+
+[principles]
+ai_agnostic = true
+cloud_agnostic = true
+database_agnostic = true
+local_first = true
+saas_ready = true
+graph_native = true
+declarative = true
+policy_controlled = true
+evidence_oriented = true
+toolchain_composable = true
+
+[docs]
+default_docs_frontend = "fumadocs"
+canonical_docs_dir = "docs"
+
+[toolchain.defaults]
+cli_language = "rust"
+package_manager = "bun"
+docs = "fumadocs"
+task_backend_default = "nx-under-monad-wrapper"
+polyglot_task_backend_optional = "moon"
+ci_execution = "dagger"
+strict_reproducibility_optional = "nix"
+
+[toolchain.enterprise_build_backends]
+maximum_scale = "buck2"
+backend_heavy = "pants"
+jvm_heavy = "gradle-develocity"
+
+[product.next_phase]
+name = "Product Definition and Implementation Planning"
+first_artifact = "Product Charter"
