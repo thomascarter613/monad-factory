@@ -25,7 +25,11 @@
     "moon:version": "moon --version",
     "typecheck": "tsc --showConfig --project tsconfig.base.json > /dev/null",
     "check:ci": "bash scripts/check-ci.sh",
-    "ci:local": "bun run check:ci && bun run check"
+    "ci:local": "bun run check:ci && bun run check",
+    "check:github-planning": "python3 scripts/github/check-github-planning.py",
+    "github:labels": "bash scripts/github/create-labels.sh",
+    "github:issues:dry-run": "python3 scripts/github/create-issues.py --dry-run",
+    "github:issues": "bash scripts/github/create-issues.sh"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
