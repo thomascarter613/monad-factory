@@ -20,6 +20,7 @@ required_files = [
     "crates/monad-core/src/lib.rs",
         "crates/monad-core/src/memory.rs",
         "crates/monad-core/src/graph.rs",
+        "crates/monad-core/src/context_foundation.rs",
     "crates/monad-cli/Cargo.toml",
     "crates/monad-cli/src/main.rs",
         "crates/monad-cli/src/cli.rs",
@@ -40,6 +41,7 @@ required_files = [
         "docs/cli/memory-check.md",
         "docs/cli/memory-command.md",
         "docs/cli/graph-command.md",
+        "docs/cli/context-command.md",
 ]
 
 required_crates = [
@@ -111,7 +113,10 @@ cargo run -p monad-cli -- graph json | grep "\"engine\": \"native\"" >/dev/null
 cargo run -p monad-cli -- graph mermaid | grep "graph TD" >/dev/null
 cargo run -p monad-cli -- graph dot | grep "digraph monad_factory" >/dev/null
 cargo run -p monad-cli -- context help >/dev/null
-cargo run -p monad-cli -- context pack >/dev/null
+cargo run -p monad-cli -- context pack | grep "engine: native" >/dev/null
+cargo run -p monad-cli -- context verify | grep "engine: native" >/dev/null
+cargo run -p monad-cli -- context handoff | grep "engine: native" >/dev/null
+cargo run -p monad-cli -- context exports | grep "engine: native" >/dev/null
 cargo run -p monad-cli -- memory status | grep "engine: native" >/dev/null
 cargo run -p monad-cli -- memory backends | grep "engine: native" >/dev/null
 cargo run -p monad-cli -- memory policy | grep "engine: native" >/dev/null

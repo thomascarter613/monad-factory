@@ -5,8 +5,14 @@ use std::fmt::{Display, Formatter};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+mod context_foundation;
 mod graph;
 mod memory;
+
+pub use context_foundation::{
+    inspect_context_foundation, ContextArtifact, ContextArtifactSpec, ContextFoundation,
+    CONTEXT_EXPORT_TARGETS, CONTEXT_HANDOFF_PATH, CONTEXT_PACK_ID, EXPECTED_CONTEXT_ARTIFACTS,
+};
 
 pub use graph::{build_repository_graph, GraphEdge, GraphNode, GraphRenderFormat, RepositoryGraph};
 
