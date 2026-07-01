@@ -1,67 +1,53 @@
-# Monad OS
+---
+title: "Monad Factory"
+description: "A maximal functional, polyglot, AI-ready, governance-grade monorepo product-factory platform."
+status: "approved"
+canonical: true
+---
 
-Monad OS is an AI-agnostic, cloud-agnostic, database-agnostic SDLC control plane and monorepo operating system.
+# Monad Factory
 
-It is intended to become a governed, queryable, auditable software delivery platform that connects code, documentation, architecture, decisions, requirements, policies, tests, security evidence, releases, deployments, incidents, operations, and AI-assisted workflows into one lifecycle graph.
+`monad-factory` is a maximal functional, local-first, polyglot, AI-ready, governance-grade monorepo product-factory platform.
 
-## Current Repository Stage
+The canonical v1 planning artifact is:
 
-This repository is currently in the **pre-implementation architecture and product strategy stage**.
+```txt
+docs/product/v1-maximal-functional-scope-and-delivery-plan.md
+```
 
-The purpose of this initial commit is to capture the product vision, architectural direction, SDLC scope, competitive moat strategy, and implementation trajectory before beginning formal Product Definition and Implementation Planning.
+## Core v1 Direction
 
-## Product Identity
+Monad Factory v1 includes:
 
-Category:
+* polyglot monorepo foundation
+* Rust-based `monad` CLI
+* Next.js web app
+* TypeScript, Rust, Go, Python, and Java services
+* root orchestration with `moon`
+* toolchain management with `mise`
+* Bun workspace
+* GitHub automation
+* Docker local infrastructure
+* Kubernetes/cloud deployment paths
+* publishing workflows
+* contracts and schemas
+* ADRs and governance docs
+* policy-as-code
+* Monad Memory
+* AI tool exports
+* daemon mode
+* agent workflows
+* Nx adapter
+* template generation
+* plugin system
+* marketplace foundation
+* multi-repo and organization governance
+* hosted/self-hosted control-plane foundation
 
-> AI-native SDLC Control Plane
+## Documentation
 
-Product:
+Start here:
 
-> Monad OS
-
-Technical Identity:
-
-> Monorepo Operating System
-
-Commercial Identity:
-
-> Governed software delivery platform for AI-era engineering teams
-
-## Core Thesis
-
-Monad OS should not merely scaffold repositories.
-
-Monad OS should become a control plane that can generate, validate, govern, document, secure, observe, release, operate, and continuously improve software systems across the entire SDLC.
-
-## Key Principles
-
-1. AI-agnostic by design.
-2. Cloud-agnostic by design.
-3. Database-agnostic by design.
-4. Toolchain-composable rather than toolchain-locked.
-5. Declarative intent as the source of truth.
-6. Graph-native understanding of the software system.
-7. Governance, evidence, and traceability built in from the beginning.
-8. AI assistance is optional, permissioned, auditable, and policy-controlled.
-9. Local-first core, SaaS-ready architecture.
-10. Future-proof through adapters, packs, plugins, and lifecycle graph modeling.
-
-## Immediate Next Phase
-
-After this foundation commit, the next phase is:
-
-> Product Definition and Implementation Planning
-
-Expected next artifacts:
-
-1. Product Charter
-2. Product Requirements Document
-3. Initial ADR set
-4. v0/v1/v2 roadmap
-5. Canonical domain model
-6. CLI command contract
-7. Manifest schema
-8. Initial implementation architecture
-9. Bootstrap scaffold plan
-
+```txt
+docs/00-index.md
+```

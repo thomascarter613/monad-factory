@@ -1,45 +1,39 @@
+name = "monad-factory"
+version = "0.1.0"
+description = "A maximal functional, polyglot, AI-ready, governance-grade monorepo product-factory platform."
+license = "MIT"
+owner = "Thomas Carter"
+canonical_scope = "docs/product/v1-maximal-functional-scope-and-delivery-plan.md"
+
 [workspace]
-name = "monad-os"
-stage = "pre-implementation-architecture-and-product-strategy"
-description = "AI-agnostic SDLC control plane and monorepo operating system."
-private = true
-
-[identity]
-category = "AI-native SDLC Control Plane"
-product = "Monad OS"
-technical_identity = "Monorepo Operating System"
-commercial_identity = "Governed software delivery platform for AI-era engineering teams"
-
-[principles]
-ai_agnostic = true
-cloud_agnostic = true
-database_agnostic = true
+stage = "foundation"
 local_first = true
-saas_ready = true
-graph_native = true
-declarative = true
-policy_controlled = true
-evidence_oriented = true
-toolchain_composable = true
+polyglot = true
+ai_ready = true
+governance_grade = true
+maximal_functional_v1 = true
 
-[docs]
-default_docs_frontend = "fumadocs"
-canonical_docs_dir = "docs"
+[cli]
+name = "monad"
+language = "rust"
 
-[toolchain.defaults]
-cli_language = "rust"
-package_manager = "bun"
-docs = "fumadocs"
-task_backend_default = "nx-under-monad-wrapper"
-polyglot_task_backend_optional = "moon"
-ci_execution = "dagger"
-strict_reproducibility_optional = "nix"
+[languages]
+typescript = true
+rust = true
+go = true
+python = true
+java = true
 
-[toolchain.enterprise_build_backends]
-maximum_scale = "buck2"
-backend_heavy = "pants"
-jvm_heavy = "gradle-develocity"
-
-[product.next_phase]
-name = "Product Definition and Implementation Planning"
-first_artifact = "Product Charter"
+[capabilities]
+monad_memory = true
+daemon = true
+agent_workflows = true
+policy_as_code = true
+nx_adapter = true
+templates = true
+plugins = true
+marketplace = true
+deployment = true
+publishing = true
+federation = true
+control_plane = true

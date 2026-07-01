@@ -1,0 +1,17 @@
+# Default owner
+
+* @thomascarter613
+
+# Canonical planning and governance
+
+/docs/product/ @thomascarter613
+/docs/adr/ @thomascarter613
+/policies/ @thomascarter613
+
+# CLI and core Rust crates
+
+/crates/ @thomascarter613
+
+# GitHub automation
+
+/.github/ @thomascarter613

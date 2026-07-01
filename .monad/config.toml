@@ -1,0 +1,24 @@
+[monad]
+version = "0.1.0"
+repo = "monad-factory"
+canonical_scope = "docs/product/v1-maximal-functional-scope-and-delivery-plan.md"
+
+[memory]
+enabled = true
+root = ".monad/memory"
+private_memory_path = ".monad/memory/private"
+canonical_path = ".monad/memory/canonical"
+
+[policy]
+enabled = true
+root = "policies"
+
+[ai]
+enabled = true
+vendor_neutral = true
+
+[daemon]
+enabled = true
+
+[nx]
+enabled = true

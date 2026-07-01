@@ -1,3 +1,31 @@
+# Dependencies
+node_modules/
+.bun/
+.pnpm-store/
+.yarn/
+vendor/
+
+# Build outputs
+dist/
+build/
+out/
+target/
+coverage/
+.next/
+.turbo/
+.nx/
+.moon/cache/
+.moon/temp/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
 # OS/editor
 .DS_Store
 Thumbs.db
@@ -6,29 +34,26 @@ Thumbs.db
 !.vscode/extensions.json
 !.vscode/settings.json
 
-# Logs
-*.log
-logs/
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pyright/
+*.pyc
 
-# Environment
-.env
-.env.*
-!.env.example
+# Java/Gradle
+.gradle/
+*.class
 
-# Dependencies/build outputs
-node_modules/
-dist/
-build/
-coverage/
-.turbo/
-.nx/
-.moon/cache/
+# Go
+bin/
+
+# Local monad private/generated state
+.monad/memory/private/*
+!.monad/memory/private/.gitignore
+.monad/memory/indexes/*
+!.monad/memory/indexes/.gitkeep
+.monad/runtime/
 .monad/cache/
-
-# Temporary files
-tmp/
-.temp/
-*.tmp
-
-# Generated reports
-reports/
