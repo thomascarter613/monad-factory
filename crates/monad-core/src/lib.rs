@@ -767,6 +767,219 @@ fn clean_manifest_value(value: &str) -> String {
         .to_string()
 }
 
+/// One native toolchain check item.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct ToolchainCheckItem {
+    /// Stable item name.
+    pub name: String,
+
+    /// Check status.
+    pub status: CheckStatus,
+
+    /// Human-readable check message.
+    pub message: String,
+}
+
+/// Native toolchain check report.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct ToolchainCheckReport {
+    /// Workspace root used for the check.
+    pub root: PathBuf,
+
+    /// Overall check status.
+    pub status: CheckStatus,
+
+    /// Individual check items.
+    pub items: Vec<ToolchainCheckItem>,
+
+    /// Toolchain inspection used by the check.
+    pub inspection: ToolchainInspection,
+}
+
+impl ToolchainCheckReport {
+    /// Count passing check items.
+    #[must_use]
+    pub fn pass_count(&self) -> usize {
+        self.items
+            .iter()
+            .filter(|item| item.status == CheckStatus::Pass)
+            .count()
+    }
+
+    /// Count warning check items.
+    #[must_use]
+    pub fn warn_count(&self) -> usize {
+        self.items
+            .iter()
+            .filter(|item| item.status == CheckStatus::Warn)
+            .count()
+    }
+
+    /// Count failing check items.
+    #[must_use]
+    pub fn fail_count(&self) -> usize {
+        self.items
+            .iter()
+            .filter(|item| item.status == CheckStatus::Fail)
+            .count()
+    }
+}
+
+/// Run the native Monad Factory toolchain check.
+///
+/// # Errors
+///
+/// Returns an error when toolchain inspection fails.
+pub fn run_toolchain_check(root: &Path) -> Result<ToolchainCheckReport, WorkspaceInspectionError> {
+    let inspection = inspect_toolchain(root)?;
+    let mut items = Vec::new();
+
+    add_toolchain_file_check(&mut items, &inspection);
+    add_mise_tool_check(&mut items, &inspection);
+    add_package_manager_check(&mut items, &inspection);
+    add_rust_toolchain_check(&mut items, &inspection);
+    add_required_toolchain_status_checks(&mut items, &inspection);
+
+    let status = summarize_toolchain_check_status(&items);
+
+    Ok(ToolchainCheckReport {
+        root: inspection.root.clone(),
+        status,
+        items,
+        inspection,
+    })
+}
+
+fn add_toolchain_file_check(items: &mut Vec<ToolchainCheckItem>, inspection: &ToolchainInspection) {
+    let missing_files = inspection.missing_file_names();
+
+    items.push(ToolchainCheckItem {
+        name: "toolchain-files".to_string(),
+        status: presence_status(missing_files.is_empty()),
+        message: if missing_files.is_empty() {
+            format!(
+                "all {} expected toolchain files are present",
+                inspection.files.len()
+            )
+        } else {
+            format!("missing toolchain files: {}", missing_files.join(", "))
+        },
+    });
+}
+
+fn add_mise_tool_check(items: &mut Vec<ToolchainCheckItem>, inspection: &ToolchainInspection) {
+    let missing_tools = inspection.missing_tool_names();
+
+    items.push(ToolchainCheckItem {
+        name: "mise-tools".to_string(),
+        status: presence_status(missing_tools.is_empty()),
+        message: if missing_tools.is_empty() {
+            format!(
+                "all {} expected mise tools are declared",
+                inspection.declared_tools.len()
+            )
+        } else {
+            format!("missing mise tools: {}", missing_tools.join(", "))
+        },
+    });
+}
+
+fn add_package_manager_check(
+    items: &mut Vec<ToolchainCheckItem>,
+    inspection: &ToolchainInspection,
+) {
+    let message = inspection.package_manager.as_deref().map_or_else(
+        || "package manager declaration is missing".to_string(),
+        |manager| format!("package manager declared as `{manager}`"),
+    );
+
+    add_status_check(
+        items,
+        "package-manager",
+        presence_status(inspection.package_manager.is_some()),
+        message,
+    );
+}
+
+fn add_rust_toolchain_check(items: &mut Vec<ToolchainCheckItem>, inspection: &ToolchainInspection) {
+    let message = inspection.rust_toolchain_channel.as_deref().map_or_else(
+        || "Rust toolchain channel is missing".to_string(),
+        |channel| format!("Rust toolchain channel declared as `{channel}`"),
+    );
+
+    add_status_check(
+        items,
+        "rust-toolchain",
+        presence_status(inspection.rust_toolchain_channel.is_some()),
+        message,
+    );
+}
+
+fn add_required_toolchain_status_checks(
+    items: &mut Vec<ToolchainCheckItem>,
+    inspection: &ToolchainInspection,
+) {
+    let checks = [
+        (
+            "root-check-script",
+            inspection.check_script_status,
+            "package.json script `check` is required",
+        ),
+        (
+            "root-toolchain-check-script",
+            inspection.toolchain_check_script_status,
+            "package.json script `check:toolchain` is required",
+        ),
+        (
+            "rust-check-script",
+            inspection.rust_check_script_status,
+            "package.json script `check:rust` is required",
+        ),
+        (
+            "moon-workspace",
+            inspection.moon_workspace_status,
+            ".moon/workspace.yml is required",
+        ),
+        (
+            "moon-toolchains",
+            inspection.moon_toolchains_status,
+            ".moon/toolchains.yml is required",
+        ),
+        (
+            "cargo-workspace",
+            inspection.cargo_workspace_status,
+            "Cargo.toml must declare a Cargo workspace",
+        ),
+    ];
+
+    for (name, status, message) in checks {
+        add_status_check(items, name, status, message.to_string());
+    }
+}
+
+fn summarize_toolchain_check_status(items: &[ToolchainCheckItem]) -> CheckStatus {
+    if items.iter().any(|item| item.status == CheckStatus::Fail) {
+        CheckStatus::Fail
+    } else if items.iter().any(|item| item.status == CheckStatus::Warn) {
+        CheckStatus::Warn
+    } else {
+        CheckStatus::Pass
+    }
+}
+
+fn add_status_check(
+    items: &mut Vec<ToolchainCheckItem>,
+    name: &str,
+    status: CheckStatus,
+    message: String,
+) {
+    items.push(ToolchainCheckItem {
+        name: name.to_string(),
+        status,
+        message,
+    });
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

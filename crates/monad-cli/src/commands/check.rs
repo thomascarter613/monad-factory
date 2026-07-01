@@ -2,7 +2,9 @@
 
 use std::path::Path;
 
-use monad_core::{run_foundation_check, FoundationCheckReport};
+use monad_core::{
+    run_foundation_check, run_toolchain_check, FoundationCheckReport, ToolchainCheckReport,
+};
 
 use crate::commands::unknown_argument;
 
@@ -22,7 +24,7 @@ pub fn render(args: &[String]) -> Result<String, String> {
     match target {
         "all" => Ok(response("all", "bun run check")),
         "foundation" => foundation(),
-        "toolchain" => Ok(response("toolchain", "bun run check:toolchain")),
+        "toolchain" => toolchain(),
         "ci" => Ok(response("ci", "bun run check:ci")),
         "github-planning" => Ok(response("github-planning", "bun run check:github-planning")),
         "rust" => Ok(response("rust", "bun run check:rust")),
@@ -35,6 +37,12 @@ fn foundation() -> Result<String, String> {
     let report = run_foundation_check(Path::new(".")).map_err(|error| error.to_string())?;
 
     Ok(render_foundation_report(&report))
+}
+
+fn toolchain() -> Result<String, String> {
+    let report = run_toolchain_check(Path::new(".")).map_err(|error| error.to_string())?;
+
+    Ok(render_toolchain_report(&report))
 }
 
 fn render_foundation_report(report: &FoundationCheckReport) -> String {
@@ -55,6 +63,38 @@ fn render_foundation_report(report: &FoundationCheckReport) -> String {
             "foundation_files_present: {}/{}",
             report.inspection.present_foundation_file_count(),
             report.inspection.foundation_files.len()
+        ),
+        "items:".to_string(),
+    ];
+
+    for item in &report.items {
+        lines.push(format!(
+            "  - {}: {} - {}",
+            item.name, item.status, item.message
+        ));
+    }
+
+    lines.join("\n")
+}
+
+fn render_toolchain_report(report: &ToolchainCheckReport) -> String {
+    let mut lines = vec![
+        "check_target: toolchain".to_string(),
+        "engine: native".to_string(),
+        format!("workspace_root: {}", report.root.display()),
+        format!("status: {}", report.status),
+        format!("pass_count: {}", report.pass_count()),
+        format!("warn_count: {}", report.warn_count()),
+        format!("fail_count: {}", report.fail_count()),
+        format!(
+            "toolchain_files_present: {}/{}",
+            report.inspection.present_file_count(),
+            report.inspection.files.len()
+        ),
+        format!(
+            "mise_tools_declared: {}/{}",
+            report.inspection.declared_tool_count(),
+            report.inspection.declared_tools.len()
         ),
         "items:".to_string(),
     ];
@@ -129,6 +169,19 @@ mod tests {
 
         assert!(output.contains("check_target: foundation"));
         assert!(output.contains("engine: native"));
+        assert!(output.contains("items:"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn renders_native_toolchain_check() -> Result<(), String> {
+        let output = render(&args(&["toolchain"]))?;
+
+        assert!(output.contains("check_target: toolchain"));
+        assert!(output.contains("engine: native"));
+        assert!(output.contains("toolchain_files_present:"));
+        assert!(output.contains("mise_tools_declared:"));
         assert!(output.contains("items:"));
 
         Ok(())

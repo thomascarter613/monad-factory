@@ -33,6 +33,7 @@ required_files = [
         "docs/cli/workspace-inspection.md",
         "docs/cli/foundation-check.md",
         "docs/cli/toolchain-inspection.md",
+        "docs/cli/toolchain-check.md",
 ]
 
 required_crates = [
@@ -93,6 +94,7 @@ cargo run -p monad-cli -- help >/dev/null
 cargo run -p monad-cli -- version >/dev/null
 cargo run -p monad-cli -- info >/dev/null
 cargo run -p monad-cli -- check all >/dev/null
+cargo run -p monad-cli -- check toolchain | grep "engine: native" >/dev/null
 cargo run -p monad-cli -- check foundation | grep "engine: native" >/dev/null
 cargo run -p monad-cli -- inspect workspace | grep "workspace_manifest_loaded: true" >/dev/null
 cargo run -p monad-cli -- inspect scope >/dev/null
