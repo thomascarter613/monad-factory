@@ -23,7 +23,9 @@
     "lint": "biome lint .",
     "moon:check": "moon run repo:check",
     "moon:version": "moon --version",
-    "typecheck": "tsc --showConfig --project tsconfig.base.json > /dev/null"
+    "typecheck": "tsc --showConfig --project tsconfig.base.json > /dev/null",
+    "check:ci": "bash scripts/check-ci.sh",
+    "ci:local": "bun run check:ci && bun run check"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
