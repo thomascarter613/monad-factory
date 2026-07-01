@@ -1,0 +1,16 @@
+# Monad Factory moon workspace.
+#
+# The root repository is modeled as the `repo` project so root governance,
+# formatting, validation, and orchestration tasks can be invoked through moon.
+#
+# Product/application/service projects will become real moon projects as
+# they move from directory skeletons to implemented packages.
+
+projects:
+  globs:
+    - "apps/*"
+    - "packages/*"
+    - "services/*"
+    - "crates/*"
+  sources:
+    repo: "."

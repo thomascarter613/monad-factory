@@ -1,0 +1,16 @@
+# Monad Factory moon toolchains.
+#
+# JavaScript and TypeScript are enabled now because the root control plane
+# uses Bun, Biome, Lefthook, and TypeScript config.
+#
+# Rust, Go, Python, and Java implementation toolchain details will be
+# expanded when the corresponding v1 service/crate foundations are created.
+
+javascript:
+  packageManager: "bun"
+
+typescript: {}
+
+node: {}
+
+bun: {}

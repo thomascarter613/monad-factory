@@ -1,0 +1,48 @@
+# Root moon project configuration.
+#
+# Project id: repo
+# Purpose: root governance, validation, and control-plane orchestration.
+
+id: "repo"
+
+tags:
+  - "root"
+  - "governance"
+  - "control-plane"
+  - "toolchain"
+
+tasks:
+  check:
+    command: "bun run check"
+    options:
+      cache: false
+
+  check-foundation:
+    command: "bun run check:foundation"
+    options:
+      cache: false
+
+  check-toolchain:
+    command: "bun run check:toolchain"
+    options:
+      cache: false
+
+  format:
+    command: "bun run format:check"
+    options:
+      cache: false
+
+  format-write:
+    command: "bun run format:write"
+    options:
+      cache: false
+
+  lint:
+    command: "bun run lint"
+    options:
+      cache: false
+
+  typecheck:
+    command: "bun run typecheck"
+    options:
+      cache: false

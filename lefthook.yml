@@ -1,0 +1,25 @@
+# Monad Factory Git hooks.
+#
+# Hooks are intentionally conservative at this stage:
+# - root file validation
+# - foundation validation
+# - Biome formatting/lint checks for supported file types
+#
+# Heavier language-specific checks are added as real projects/services are
+# implemented under apps/, packages/, services/, crates/, and infra/.
+
+pre-commit:
+  parallel: false
+  commands:
+    root-toolchain:
+      run: bash scripts/check-root-toolchain.sh
+    biome:
+      run: bun run format:check
+
+pre-push:
+  parallel: false
+  commands:
+    foundation:
+      run: bun run check:foundation
+    root-check:
+      run: bun run check:toolchain
