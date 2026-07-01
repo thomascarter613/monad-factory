@@ -43,7 +43,8 @@ required_workflow_fragments = [
     "bun run check:ci",
     "bun run check:foundation",
     "bun run check:toolchain",
-    "bun run typecheck",
+    "bun run doctor:ci",
+        "bun run typecheck",
     "bun run format:check",
     "bun run moon:version",
     "bun run check",
@@ -70,7 +71,8 @@ required_scripts = [
     "check:toolchain",
     "format:check",
     "moon:version",
-    "typecheck",
+    "doctor:ci",
+        "typecheck",
 ]
 
 missing_scripts = [script for script in required_scripts if script not in scripts]

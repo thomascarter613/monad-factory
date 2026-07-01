@@ -45,6 +45,9 @@ jobs:
       - name: Validate root toolchain files
         run: bun run check:toolchain
 
+      - name: Repository doctor check
+        run: bun run doctor:ci
+
       - name: TypeScript configuration check
         run: bun run typecheck
 

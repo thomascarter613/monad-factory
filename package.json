@@ -13,10 +13,10 @@
     "templates/*"
   ],
   "scripts": {
-    "check": "bun run check:foundation && bun run check:toolchain && bun run format:check",
+    "check": "bun run check:foundation && bun run check:toolchain && bun run check:ci && bun run check:github-planning && bun run doctor:ci && bun run format:check",
     "check:foundation": "bash scripts/check-foundation.sh",
     "check:toolchain": "bash scripts/check-root-toolchain.sh",
-    "doctor": "bun run check",
+    "doctor": "python3 scripts/doctor.py",
     "format:check": "biome check .",
     "format:write": "biome check --write .",
     "hooks:install": "lefthook install",
@@ -29,7 +29,9 @@
     "check:github-planning": "python3 scripts/github/check-github-planning.py",
     "github:labels": "bash scripts/github/create-labels.sh",
     "github:issues:dry-run": "python3 scripts/github/create-issues.py --dry-run",
-    "github:issues": "bash scripts/github/create-issues.sh"
+    "github:issues": "bash scripts/github/create-issues.sh",
+    "doctor:ci": "python3 scripts/doctor.py --ci",
+    "doctor:strict": "python3 scripts/doctor.py --strict"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
