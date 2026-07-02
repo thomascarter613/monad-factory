@@ -12,7 +12,9 @@ name = "monad"
 path = "src/main.rs"
 
 [dependencies]
+assert_cmd = "2.2.2"
 monad-core = { path = "../monad-core" }
+predicates = "3.1.4"
 
 [lints]
 workspace = true

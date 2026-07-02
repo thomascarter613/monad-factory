@@ -1,0 +1,19 @@
+[package]
+name = "monad-validation"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+monad-core.workspace = true
+monad-config.workspace = true
+monad-runtime.workspace = true
+
+thiserror.workspace = true
+camino.workspace = true
+fs-err.workspace = true
+ignore.workspace = true
+walkdir.workspace = true
+globset.workspace = true
+tracing.workspace = true

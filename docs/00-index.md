@@ -27,3 +27,10 @@ canonical: true
 * [Marketplace](./marketplace/00-index.md)
 * [Federation](./federation/00-index.md)
 * [Hosted Control Plane](./hosted-control-plane/00-index.md)
+
+## Security
+
+
+## Work Packets
+
+- [WP-0007: API Key Management and Audit Actor Propagation](work-packets/WP-0007-api-key-management-and-audit-actor-propagation.md)
